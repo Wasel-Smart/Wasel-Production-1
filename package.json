@@ -1,0 +1,14 @@
+{
+  "name": "wasel",
+  "version": "1.0.0",
+  "description": "Wasel Production",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'Build completed'",
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
