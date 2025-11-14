@@ -1,0 +1,8 @@
+{
+  "appId": "com.wassel.app",
+  "appName": "Wassel",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https"
+  }
+}
