@@ -4,14 +4,14 @@ const path = require('path');
 
 const server = http.createServer((req, res) => {
     if (req.url === '/' || req.url === '/index.html') {
-        fs.readFile(path.join(__dirname, 'index.html'), (err, data) => {
+        fs.readFile(path.join(__dirname, 'index.html'), 'utf-8', (err, data) => {
             if (err) {
                 console.error('Error reading index.html:', err);
                 res.writeHead(500);
                 res.end('Error loading page');
                 return;
             }
-            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
             res.end(data);
         });
     } else {
@@ -20,19 +20,12 @@ const server = http.createServer((req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
-function startServer(port) {
-    server.listen(port, () => {
-        console.log(`Wasel Production - Server running on port ${port}`);
-    }).on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-            console.log(`Port ${port} is busy, trying port ${port + 1}...`);
-            startServer(port + 1);
-        } else {
-            console.error('Server error:', err);
-        }
+if (require.main === module) {
+    server.listen(PORT, () => {
+        console.log(`Wasel Production - Server running on port ${PORT}`);
     });
 }
 
-startServer(PORT);
+module.exports = server;

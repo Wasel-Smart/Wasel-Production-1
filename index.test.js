@@ -1,5 +1,18 @@
-const add = require('./index');
+const request = require('supertest');
+const server = require('./index');
 
-test('adds 1 + 2 to equal 3', () => {
-  expect(add(1, 2)).toBe(3);
+beforeAll((done) => {
+    server.listen(0, done);
+});
+
+afterAll((done) => {
+    server.close(done);
+});
+
+describe('Server', () => {
+  it('should serve index.html', async () => {
+    const response = await request(server).get('/');
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toBe('text/html; charset=utf-8');
+  });
 });
