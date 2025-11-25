@@ -1,54 +1,85 @@
-# To learn more about how to use Nix to configure your environment
-# see: https://firebase.google.com/docs/studio/customize-workspace
-{ pkgs, ... }: {
-  # Which nixpkgs channel to use.
-  channel = "stable-24.05"; # or "unstable"
+{ pkgs, ... }:
 
-  # Use https://search.nixos.org/packages to find packages
+{
+  # Use the latest stable nixpkgs (24.05 is fine, 24.11 is newer)
+  channel = "stable-24.11";  # or "unstable" if you want bleeding edge
+
+  # Packages available in the shell
   packages = [
-    # pkgs.go
-    # pkgs.python311
-    # pkgs.python311Packages.pip
-    # pkgs.nodejs_20
-    # pkgs.nodePackages.nodemon
+    pkgs.git
+    pkgs.wget
+    pkgs.unzip
+    pkgs.jdk17           # Required for Gradle 8.6+
+    pkgs.gradle          # Will pull Gradle 8.11+ automatically
+    pkgs.android-tools   # Includes adb, fastboot, etc.
   ];
 
-  # Sets environment variables in the workspace
-  env = {};
+  # Android-specific setup
+  env = {
+    # Tell Gradle to use our JDK 17 (very important!)
+    JAVA_HOME = "${pkgs.jdk17}";
+
+    # Android SDK setup
+    ANDROID_HOME   = "/opt/android-sdk";
+    ANDROID_SDK_ROOT = "/opt/android-sdk";
+
+    # Add Android tools to PATH
+    PATH = "$PATH:/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools";
+  };
+
+  # Install Android SDK + common tools on workspace creation
   idx = {
-    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      # "vscodevim.vim"
+      "vscjava.vscode-java-pack"
+      "vscjava.vscode-gradle"
+      "esbenp.prettier-vscode"   # optional, if you have web/JS code too
     ];
 
-    # Enable previews
     previews = {
       enable = true;
       previews = {
+        # Example for React Native / Expo (remove if not needed)
         # web = {
-        #   # Example: run "npm run dev" with PORT set to IDX's defined port for previews,
-        #   # and show it in IDX's web preview panel
-        #   command = ["npm" "run" "dev"];
+        #   command = [ "npm" "start" ];
         #   manager = "web";
-        #   env = {
-        #     # Environment variables to set for your server
-        #     PORT = "$PORT";
-        #   };
+        #   env = { PORT = "$PORT"; };
         # };
       };
     };
 
-    # Workspace lifecycle hooks
     workspace = {
-      # Runs when a workspace is first created
       onCreate = {
-        # Example: install JS dependencies from NPM
-        # npm-install = "npm install";
+        # Install Android command line tools + accept licenses
+        install-android-sdk = ''
+          mkdir -p /opt/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-win-11076708_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d /opt/android-sdk/cmdline-tools
+          mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest
+          rm cmdline-tools.zip
+
+          # Accept all licenses
+          yes | sdkmanager --licenses
+
+          # Install essential packages (adjust versions as needed)
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "cmdline-tools;latest" \
+            "cmake;10.0.2" \
+            "ndk;26.1.10909125"
+        '';
       };
-      # Runs when the workspace is (re)started
+
       onStart = {
-        # Example: start a background task to watch and re-build backend code
-        # watch-backend = "npm run watch-backend";
+        # Optional: print helpful info when you open the terminal
+        welcome = ''
+          echo "Android dev environment ready!"
+          echo "JAVA_HOME: $JAVA_HOME"
+          echo "Gradle: $(gradle --version | grep Gradle)"
+          echo "Android SDK: $ANDROID_HOME"
+          echo "Run './gradlew tasks' to see available tasks"
+        '';
       };
     };
   };
